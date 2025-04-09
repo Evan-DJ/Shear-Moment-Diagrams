@@ -41,8 +41,8 @@ def shear_moment_diagram(loads, length):
     plt.tight_layout()
     plt.show()
 
-# Example usage
-loads = [(3, 1500), (6, 50), (9, 75)]  # [(distance, force), ...]
-length = 10  # meters
+# Example
+loads = [(3, 1500), (6, 50), (9, 75)] 
+length = 10
 
 shear_moment_diagram(loads, length)
