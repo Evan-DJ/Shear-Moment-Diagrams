@@ -1,48 +1,71 @@
+#Note Code Uses Meters and Newtons as Units
+
 import numpy as np
 import matplotlib.pyplot as plt
 
-def shear_moment_diagram(loads, length):
+def shear_moment_diagram(loads, length, E, I):
     # Calculate reactions at supports
     total_force = sum(load[1] for load in loads)
     moment_left = sum(load[0] * load[1] for load in loads)
     reaction_right = moment_left / length
     reaction_left = total_force - reaction_right
-
-    # Generate x-coordinates along the beam
     x = np.linspace(0, length, 100)
 
-    # Calculate shear and moment values at each x-coordinate
+    #shear and moment values along beaam
     shear = np.zeros_like(x)
     moment = np.zeros_like(x)
-
     for i in range(len(x)):
         shear[i] = reaction_left
         moment[i] = reaction_left * x[i]
-
         for load_dist, load_force in loads:
             if x[i] > load_dist:
                 shear[i] -= load_force
                 moment[i] -= load_force * (x[i] - load_dist)
+    
+    #Virtual Work Calculations
+    deflection = np.zeros_like(x)
+    rotation = np.zeros_like(x)
 
-    # Plot shear and moment diagrams
-    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(8, 6))
+    for i in range(len(x)):
+        M_virtual = np.zeros_like(x)
+        M_virtual[i] = 1
+        
+        integral_term = np.trapz(moment * M_virtual, x)
+        rotation[i] = integral_term/(E * I)
+        v_virtual = np.zeros_like(x)
+        v_virtual[i] = 1
+        integral_term = np.trapz(moment*v_virtual, x)
+        deflection[i] = integral_term/(E * I)
+        
+    #Plotting
+    fig, axes = plt.subplots(4, 1, figsize=(8, 10))
+    axes[0].plot(x, shear)
+    axes[0].set_ylabel('Shear Force (N)')
+    axes[0].set_title('Shear Force Diagram')
+    axes[0].grid(True)
 
-    ax1.plot(x, shear)
-    ax1.set_ylabel('Shear Force (N)')
-    ax1.set_title('Shear Force Diagram')
-    ax1.grid(True)
+    axes[1].plot(x, moment)
+    axes[1].set_ylabel('Bending Moment (Nm)')
+    axes[1].set_title('Bending Moment Diagram')
+    axes[1].grid(True)
 
-    ax2.plot(x, moment)
-    ax2.set_xlabel('Distance (m)')
-    ax2.set_ylabel('Bending Moment (Nm)')
-    ax2.set_title('Bending Moment Diagram')
-    ax2.grid(True)
+    axes[2].plot(x, deflection)
+    axes[2].set_ylabel('Deflection (m)')
+    axes[2].set_title('Deflection Diagram')
+    axes[2].grid(True)
 
+    axes[3].plot(x, np.rad2deg(rotation))
+    axes[3].set_xlabel('Distance (m)')
+    axes[3].set_ylabel('Rotation (degrees)')
+    axes[3].set_title('Rotation Diagram')
+    axes[3].grid(True)
+    
     plt.tight_layout()
     plt.show()
 
-# Example
-loads = [(3, 1500), (6, 50), (9, 75)] 
-length = 10
-
-shear_moment_diagram(loads, length)
+#INPUT DATA HERE
+loads = [(3, 1500), (6, 2000), (9, 3000)]
+length = 10 #Meters
+E = 200e9 
+I = 1e-6
+shear_moment_diagram(loads, length, E, I)
